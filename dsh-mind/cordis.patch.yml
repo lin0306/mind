@@ -1,0 +1,6 @@
+# dsh-mind 的组合层：把插件行插进当前 profile 的组合。
+# 宿主半边是 lib/index.js（构建产物，源码在 src/）。
+# 注意：`- insert:` 是覆盖语义下的新增写法；直接写没有 insert 的条目会静默跳过。
+- insert:
+    - id: mind
+      name: dsh-mind

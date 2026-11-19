@@ -1,0 +1,8 @@
+{
+  "// 根 tsconfig 只做 project references：真正的编译配置在 mind-core/ 与 dsh-mind/ 各自的 tsconfig.json 里",
+  "files": [],
+  "references": [
+    { "path": "./mind-core" },
+    { "path": "./dsh-mind" }
+  ]
+}

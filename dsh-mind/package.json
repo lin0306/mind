@@ -1,0 +1,89 @@
+{
+  "name": "dsh-mind",
+  "version": "0.1.0",
+  "description": "让 agent 带上延续的情感与思想：人设 / 情感 / 记忆 / 思想四层 + 自更新闭环（非官方插件）。Inner life for DSH agents — persona, affect, memory and thought, closed by a self-update loop.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./client": "./client/index.js"
+  },
+  "icon": "./icon.svg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lin0306/mind.git",
+    "directory": "dsh-mind"
+  },
+  "homepage": "https://github.com/lin0306/mind",
+  "bugs": {
+    "url": "https://github.com/lin0306/mind/issues"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "client/index.js",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\" && tsc -b && tsdown && tsc -p client/tsconfig.json && node scripts/build-client.mjs",
+    "clean": "node -e \"const fs=require('fs');for(const p of ['lib','../mind-core/lib','client/out'])fs.rmSync(p,{recursive:true,force:true})\"",
+    "typecheck": "tsc -b",
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "pack:check": "pnpm pack --dry-run",
+    "publish:check": "node scripts/validate.mjs",
+    "prepublishOnly": "pnpm run build && node scripts/validate.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "affect",
+    "emotion",
+    "persona",
+    "memory",
+    "情感",
+    "思想",
+    "人设"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots"
+      ]
+    }
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4"
+  },
+  "devDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@types/node": "^22.10.0",
+    "dsh-mind-core": "workspace:^",
+    "tsdown": "^0.23.4",
+    "typescript": "^5.9.0",
+    "zod": "^4.6.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

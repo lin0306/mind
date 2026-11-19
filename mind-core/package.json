@@ -1,0 +1,37 @@
+{
+  "name": "dsh-mind-core",
+  "version": "0.1.0",
+  "description": "dsh-mind 的内核：与 agent 无关的情感、人设、记忆、思想与自更新逻辑（纯函数、零依赖、可回放）",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
+    "test": "node --test \"test/**/*.test.mjs\""
+  },
+  "keywords": [
+    "dsh-mind",
+    "affect",
+    "persona",
+    "memory",
+    "agent"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "private": true
+}

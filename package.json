@@ -1,0 +1,18 @@
+{
+  "name": "mind",
+  "version": "0.0.0",
+  "private": true,
+  "description": "dsh-mind 的仓库根：内核（mind-core）+ DSH 插件（dsh-mind）。只有 dsh-mind 会发布。",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -C dsh-mind build",
+    "test": "node --test \"mind-core/test/**/*.test.mjs\" \"dsh-mind/test/**/*.test.mjs\"",
+    "validate": "node dsh-mind/scripts/validate.mjs",
+    "typecheck": "pnpm -C dsh-mind typecheck",
+    "demo": "node dsh-mind/adapters/cli/mind-cli.mjs --demo",
+    "clean": "pnpm -C dsh-mind clean && pnpm -C mind-core clean"
+  },
+  "license": "MIT"
+}

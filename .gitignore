@@ -1,0 +1,27 @@
+node_modules/
+lib/
+mind-core/lib/
+*.tsbuildinfo
+
+# 客户端产物：构建生成，只有发布时才需要（prepublishOnly 会先构建）
+dsh-mind/client/index.js
+# tsc 编译客户端的中间目录（build-client.mjs 的输入，不是源码）
+dsh-mind/client/out/
+
+# ── 内部资料，一律不进仓库 ─────────────────────────────────────────
+# 每次改动一份记录（有迹可循）；设计与方案；计划与上架材料；同类插件调研；
+# 以及给本地 agent 的工作说明 AGENTS.md。
+# 它们只存在于本地工作副本，仓库里只有代码、测试，和会随包发布的那份 dsh-mind/README.md。
+/AGENTS.md
+changelog/
+design/
+plan/
+research/
+
+# 编辑器与系统垃圾
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.log

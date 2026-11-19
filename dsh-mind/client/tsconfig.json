@@ -1,0 +1,18 @@
+// 客户端半边单独编译：目标是 CommonJS + DOM，**没有 JSX**（用 React.createElement）。
+// 与根包的 src/ 分开是因为两者的运行环境完全不同（一个是 Node/宿主，一个是浏览器/客户端）。
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2020", "DOM"],
+    "types": [],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "removeComments": false,
+    "outDir": "out",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"]
+}
