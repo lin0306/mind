@@ -1,0 +1,19 @@
+# 换行符统一：仓库里一律 LF，检出时按平台。
+#
+# 不写这一份的话，Windows 上每个文件都会在提交/检出时被来回转换，
+# 于是 IDE 里整库显示"已修改"，Linux/CI 上又会看到一片假 diff。
+* text=auto eol=lf
+
+# Windows 批处理必须是 CRLF，否则 cmd 解释器会把行尾读坏
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制：一律不碰
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.zst binary
+*.zip binary
