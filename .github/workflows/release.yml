@@ -1,0 +1,75 @@
+name: release
+
+# 打 tag（v0.1.1 这样）就自动发布到 npm。
+#
+# 用 npm 的 **Trusted Publishing（OIDC）**：不需要 NPM_TOKEN、不需要 2FA、
+# 不需要 security key——GitHub 给 Actions 签发一个短期身份，npm 认它。
+# 顺带生成 provenance，包页面上会出现"由 GitHub Actions 构建"的验证标记。
+#
+# 前置（只需做一次的网页操作，见 plan/publishing.md）：
+#   npm 包页面 → Settings → Trusted Publisher → GitHub Actions
+#     Organization or user : lin0306
+#     Repository           : mind
+#     Workflow filename    : release.yml
+#   （Environment 留空）
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: # 也允许网页上手动点一下
+
+permissions:
+  contents: read
+  id-token: write # ← OIDC 发布必需，少了这一行会 403
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing 要求 npm >= 11.5.0（Node 22 自带的还不到）
+      - name: 升级 npm
+        run: npm install -g npm@latest
+
+      - name: 装依赖
+        run: pnpm install --frozen-lockfile
+
+      # tag 与 package.json 版本不一致就直接失败——避免"发出去的是旧版本号"
+      - name: 校验 tag 与 package.json 版本一致
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG=$(node -p "require('./dsh-mind/package.json').version")
+          echo "tag=$TAG  package.json=$PKG"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::tag v$TAG 与 dsh-mind/package.json 的 $PKG 不一致"
+            exit 1
+          fi
+
+      - name: 构建
+        run: pnpm build
+
+      - name: 测试
+        run: pnpm test
+
+      - name: 发布前自检
+        run: pnpm validate
+
+      - name: 发布到 npm（OIDC，无需任何 token）
+        working-directory: dsh-mind
+        run: npm publish --access public --provenance
