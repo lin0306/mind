@@ -43,7 +43,14 @@ import { loadGlobal, loadPersonaState } from './store.js'
  */
 export function stateDir(raw: string): string {
   const trimmed = raw.trim()
-  return path.normalize(trimmed !== '' ? trimmed : path.join(dshHome(), 'dsh-mind'))
+  const base = trimmed !== '' ? trimmed : path.join(dshHome(), 'dsh-mind')
+  // 统一成**平台无关**的写法：反斜杠一律转成正斜杠。
+  //
+  // `path.normalize` 只管当前平台的风格——Windows 上它把 `/` 改成 `\`，Linux 上它把 `\`
+  // 当普通字符原样保留。所以光靠它，同一个工作区在开发机（Windows）和 CI（Linux）上会算出
+  // 两个不同的根，档案分桶和 `startsWith(root + sep)` 的包含判断都会错。
+  // 这段的注释一直写着"斜杠风格统一"，实现却依赖了平台——2026-11-19 被 CI 抓到（layout.test.mjs）。
+  return path.normalize(base).replace(/\\/g, '/')
 }
 
 /** 人设内核文件路径（用户可编辑）。 */

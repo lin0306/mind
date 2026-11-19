@@ -68,8 +68,11 @@ test('safeKey：空键叫 _global，不同的工作区键不会撞名，且不�
 
 test('路径全在根目录下，会话 id 被归一化后不会跑到目录外面', () => {
   const root = 'E:/tmp/mind'
-  assert.equal(rootDir(root), path.normalize(root))
-  assert.equal(rootDir('E:\\tmp\\mind\\'), path.normalize(root), '反斜杠与尾斜杠都要归一化')
+  // 期望值**写死**，不能拿 `path.normalize(root)` 当基准：它在 Windows 上把正斜杠换成反斜杠、
+  // 在 Linux 上原样不动。拿它当期望，等于"这个断言在开发机上绿、在 CI 上红"——
+  // 2026-11-19 就是这么红的。根只该有一种写法：正斜杠、无尾斜杠、与平台无关。
+  assert.equal(rootDir(root), root, '根只该有一种写法（正斜杠、无尾斜杠）')
+  assert.equal(rootDir('E:\\tmp\\mind\\'), root, '反斜杠与尾斜杠都要归一化')
   for (const file of [
     globalDir(root),
     globalMemoryFile(root),
