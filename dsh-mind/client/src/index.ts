@@ -168,8 +168,14 @@ function sessionTitle(ctx: ClientCtx | undefined, sessionId: string | undefined)
 /** 只依赖 `slots`：多声明一个服务就多一次"它不在就不激活"的风险。 */
 export const inject = ['slots']
 
-/** 座位 id：侧栏那一格与 `main` 那一页用同一个 id，宿主就是靠它把两者对上的。 */
-const PANEL_ID = 'dsh-mind'
+/**
+ * 座位 id：侧栏那一格与 `main` 那一页用同一个 id，宿主就是靠它把两者对上的。
+ *
+ * 它等于**包名**（`@lin0306/dsh-mind`）——这条是有测试盯着的：
+ * 设置页那一栏的 id 必须和侧栏那一格一致，而侧栏那格的 id 又必须与 loader 的 id 同源。
+ * 注意它**不参与** HTTP 路由（路由是下面独立的 `SETTINGS_ROUTE`），所以带 `/` 不会破路由。
+ */
+const PANEL_ID = '@lin0306/dsh-mind'
 
 /**
  * 排在哪儿。

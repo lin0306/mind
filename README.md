@@ -11,7 +11,7 @@
 ## 装
 
 ```bash
-dsh plugin --profile <profile> add dsh-mind
+dsh plugin --profile <profile> add @lin0306/dsh-mind
 ```
 
 装完重启该 profile 的会话。命令、配置、数据存哪，都在 **[`dsh-mind/README.md`](dsh-mind/README.md)**。

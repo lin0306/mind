@@ -3,4 +3,6 @@
 # 注意：`- insert:` 是覆盖语义下的新增写法；直接写没有 insert 的条目会静默跳过。
 - insert:
     - id: mind
-      name: dsh-mind
+      # 包名带 scope：npm 上的 `dsh-mind` 已被别人占用（v1.10.0），所以改名。
+      # 这一行必须与 package.json 的 name 完全一致，否则装不上（validate 会查）。
+      name: '@lin0306/dsh-mind'

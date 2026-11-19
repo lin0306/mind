@@ -27,7 +27,7 @@
 
 ```bash
 # 装进某个 profile（推荐先用临时 profile 试）
-dsh plugin --profile <profile> add dsh-mind
+dsh plugin --profile <profile> add @lin0306/dsh-mind
 
 # 本地开发时直接指目录
 dsh plugin --profile <profile> add file:E:/code/thought/dsh-mind   # 指向**插件包**这一层
@@ -35,7 +35,7 @@ dsh plugin --profile <profile> add file:E:/code/thought/dsh-mind   # 指向**插
 
 **零运行时依赖**：内核与用到的库都在构建时内联进产物，装的时候不需要顺手解析任何包。
 
-装完重启该 profile 的会话即可生效。卸载：`dsh plugin --profile <profile> remove dsh-mind`。
+装完重启该 profile 的会话即可生效。卸载：`dsh plugin --profile <profile> remove @lin0306/dsh-mind`。
 
 ## 命令
 

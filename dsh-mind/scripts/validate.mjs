@@ -136,7 +136,12 @@ for (const lang of ['zh', 'en']) {
 
 // ── 5. 两包一致性与 core 的干净 ─────────────────────────────
 check(pkg.version === core.version, '根包与 core 版本一致', `${pkg.version} vs ${core.version}`)
-check(pkg.name === 'dsh-mind' && core.name === 'dsh-mind-core', '两个包名是约定好的名字')
+// 包名带 scope：npm 上的 `dsh-mind` 已被别人占用（wjthqyj 的 v1.10.0），所以改成 @lin0306/dsh-mind。
+// 这里不写死完整包名，只查"是不是那个带 scope 的名字"，改名时只改一处常量。
+check(
+  pkg.name === '@lin0306/dsh-mind' && core.name === 'dsh-mind-core',
+  '包名是 @lin0306/dsh-mind（npm 上 dsh-mind 已被占用）+ 内核仍是 dsh-mind-core',
+)
 check(
   core.private === true,
   'core 是 private：它不是一个独立产品，只是内核内容',
