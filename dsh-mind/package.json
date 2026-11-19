@@ -1,6 +1,6 @@
 {
   "name": "@lin0306/dsh-mind",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "让 agent 带上延续的情感与思想：人设 / 情感 / 记忆 / 思想四层 + 自更新闭环（非官方插件）。Inner life for DSH agents — persona, affect, memory and thought, closed by a self-update loop.",
   "type": "module",
   "main": "./lib/index.js",

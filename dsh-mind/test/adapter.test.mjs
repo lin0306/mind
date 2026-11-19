@@ -146,7 +146,7 @@ function stirUp(host, session) {
 
 test('主动开口：默认关 —— 连监听都不挂，一次都不会开口', async () => {
   const host = makeHost()
-  apply(host.ctx, { proactive: false })
+  await apply(host.ctx, { proactive: false })
   const { session, agent } = birth(host, 's-pro-off')
   stirUp(host, session)
 
@@ -157,7 +157,7 @@ test('主动开口：默认关 —— 连监听都不挂，一次都不会开口
 
 test('主动开口：开了之后，心里有事 + 情绪在 + 冷却已过 → 自己起一个回合；冷却内不再说', async () => {
   const host = makeHost()
-  apply(host.ctx, { proactive: true })
+  await apply(host.ctx, { proactive: true })
   const { session, agent } = birth(host, 's-pro-on')
   stirUp(host, session)
 
@@ -185,7 +185,7 @@ test('主动开口：开了之后，心里有事 + 情绪在 + 冷却已过 → 
 
 test('主动开口：被用户打断的那一轮不说话', async () => {
   const host = makeHost()
-  apply(host.ctx, { proactive: true })
+  await apply(host.ctx, { proactive: true })
   const { session, agent } = birth(host, 's-pro-abort')
   stirUp(host, session)
 
@@ -194,9 +194,9 @@ test('主动开口：被用户打断的那一轮不说话', async () => {
   assert.equal(host.followups.length, 0, '被打断时不该主动开口')
 })
 
-test('接线：投影、人设段、实况段、工具、命令都挂上了', () => {
+test('接线：投影、人设段、实况段、工具、命令都挂上了', async () => {
   const host = makeHost()
-  apply(host.ctx, { debugLog: false })
+  await apply(host.ctx, { debugLog: false })
   assert.equal(name, 'dsh-mind')
   assert.deepEqual(inject, ['systemPrompt', 'sessionProjections'])
   assert.ok(host.registry.get('mind'), '投影要注册')
@@ -215,9 +215,9 @@ test('接线：投影、人设段、实况段、工具、命令都挂上了', ()
   assert.equal(host.commands[0].name, 'mind')
 })
 
-test('实况段：工具连续失败后，请求末尾出现情绪词', () => {
+test('实况段：工具连续失败后，请求末尾出现情绪词', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const { session, agent } = birth(host)
 
   feed(host, session, 'turn/start', { turn: 1 })
@@ -232,9 +232,9 @@ test('实况段：工具连续失败后，请求末尾出现情绪词', () => {
   assert.ok(/挫败|烦躁/.test(text), `连续失败后要有负向情绪词，实际：${text}`)
 })
 
-test('人设段：在系统提示词里，且不含短期记忆（短期记忆会毁前缀缓存）', () => {
+test('人设段：在系统提示词里，且不含短期记忆（短期记忆会毁前缀缓存）', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   // 短期池按工作区过滤（inScope），所以这个会话必须有工作区、条目也得带同一个 ws
   const { session } = birth(host, 's1', 'E:/code/thought')
   const state = host.states.get(session.id)
@@ -254,9 +254,9 @@ test('人设段：在系统提示词里，且不含短期记忆（短期记忆�
   assert.match(realtime, /用户的工作区在 E 盘/)
 })
 
-test('inner_note：工具调用折成思想，下一轮实况段能看见', () => {
+test('inner_note：工具调用折成思想，下一轮实况段能看见', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const { session, agent } = birth(host)
   feed(host, session, 'turn/start', { turn: 1 })
 
@@ -278,27 +278,27 @@ test('inner_note：工具调用折成思想，下一轮实况段能看见', () =
   assert.match(realtime, /自查：我刚才在凭印象写，不可靠/)
 })
 
-test('无关的高频事件必须原样返回同一个引用（否则每一步都白干活）', () => {
+test('无关的高频事件必须原样返回同一个引用（否则每一步都白干活）', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const { session } = birth(host)
   const before = host.states.get(session.id)
   const { after } = feed(host, session, 'assistant/stream', { frame: {} })
   assert.equal(after, before, '引用必须不变')
 })
 
-test('状态 schema 不吞字段：emptyState 解析后与原来深相等', () => {
+test('状态 schema 不吞字段：emptyState 解析后与原来深相等', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const definition = host.registry.get('mind')
   const state = emptyState(undefined, clock)
   const parsed = definition.stateSchema.parse(state)
   assert.deepEqual(parsed, state, 'zod 若剥掉未声明的键，状态会每轮悄悄丢字段')
 })
 
-test('/mind 只读：面板能出，且不动状态', () => {
+test('/mind 只读：面板能出，且不动状态', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const { session, agent } = birth(host)
   feed(host, session, 'turn/start', { turn: 1 })
   feed(host, session, 'user/message', { text: '谢谢，这个思路对' })
@@ -319,9 +319,9 @@ test('/mind 只读：面板能出，且不动状态', () => {
   assert.match(explain.text, /不能重置/)
 })
 
-test('/mind rollback：没有快照就如实说没有，并给出用法', () => {
+test('/mind rollback：没有快照就如实说没有，并给出用法', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   const { session, agent } = birth(host, 's-rollback')
   feed(host, session, 'turn/start', { turn: 1 })
 
@@ -336,14 +336,14 @@ test('/mind rollback：没有快照就如实说没有，并给出用法', () => 
   assert.match(none.text, /没有快照可回滚/)
 })
 
-test('人设内核文件：首次运行生成模板，写进去的内核能进人设段', () => {
+test('人设内核文件：首次运行生成模板，写进去的内核能进人设段', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-persona-'))
   const file = path.join(dir, 'persona.md')
   mkdirSync(dir, { recursive: true })
   writeFileSync(file, ['名字: 小和', '价值观:', '  - 诚实: 0.9', '边界:', '  - 不做破坏性操作'].join('\n'), 'utf8')
 
   const host = makeHost()
-  apply(host.ctx, { personaPath: file, stateDir: dir })
+  await apply(host.ctx, { personaPath: file, stateDir: dir })
   const { session } = birth(host, 's-persona')
 
   const text = host.sections[0].text()
@@ -356,7 +356,7 @@ test('人设内核文件：首次运行生成模板，写进去的内核能进�
 test('存档写回：跨会话的人设与统计落到 stateDir 的 v3 快照里', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-save-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session } = birth(host, 's2')
 
   feed(host, session, 'turn/start', { turn: 1 })
@@ -382,7 +382,7 @@ const textOf = (result) => (typeof result === 'string' ? result : String(result?
 test('记忆管理：/mind remember 逐条说明凭什么记着，/mind forget 划掉后不会长回来', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-forget-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-forget', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -420,9 +420,9 @@ test('记忆管理：/mind remember 逐条说明凭什么记着，/mind forget �
   assert.ok(adopted.memory.forgotten.length >= 1, '遗忘名单要跟着档案走')
 })
 
-test('forget_memory 工具：折叠时删掉（可重放），并对不上时什么都不删', () => {
+test('forget_memory 工具：折叠时删掉（可重放），并对不上时什么都不删', async () => {
   const host = makeHost()
-  apply(host.ctx, {})
+  await apply(host.ctx, {})
   // 有工作区才落进短期池（没选工作区的会话写下的东西进它自己的日记）
   const { session } = birth(host, 's-forget-tool', 'E:/code/thought')
 
@@ -457,7 +457,7 @@ test('forget_memory 工具：折叠时删掉（可重放），并对不上时什
   assert.equal(after.memory.forgotten.length, 1, '名单里记一笔')
 })
 
-test('reset-once 标记：下次启动从空档案开始，且只清一次', () => {
+test('reset-once 标记：下次启动从空档案开始，且只清一次', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-reset-'))
   const file = path.join(dir, 'state.json')
   mkdirSync(dir, { recursive: true })
@@ -491,7 +491,7 @@ test('reset-once 标记：下次启动从空档案开始，且只清一次', () 
   writeFileSync(path.join(dir, 'reset-once'), 'test\n', 'utf8')
 
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
 
   // v3 的"清空"是在每一层追加一份**空快照**，读取只认最后一行
   assert.equal(loadGlobal(dir).entries.length, 0, '标记在，就该按空存档起步')
@@ -501,7 +501,7 @@ test('reset-once 标记：下次启动从空档案开始，且只清一次', () 
 })
 
 
-test('迁移调用点：apply() 真的把 v1 档案拆到新布局（标记与文件都要出现）', () => {
+test('迁移调用点：apply() 真的把 v1 档案拆到新布局（标记与文件都要出现）', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-migrate-'))
   mkdirSync(dir, { recursive: true })
   // 一份 v1 档案：一条长期 + 一条短期 + 一条被忘掉的
@@ -545,7 +545,7 @@ test('迁移调用点：apply() 真的把 v1 档案拆到新布局（标记与�
   )
 
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
 
   // 这条测的是**调用点**。以前这里把档案的 JSON 文本当成 stateDir 传进 migrateV1，
   // 于是标记与文件全落到一个乱路径、写入静默失败，日志却报「迁移成功」——
@@ -558,7 +558,7 @@ test('迁移调用点：apply() 真的把 v1 档案拆到新布局（标记与�
   assert.ok(existsSync(path.join(dir, 'archive', 'state.v1.json')), '旧 state.json 改名进 archive/')
 })
 
-test('短期层跨会话：本工作区的落地文件会被新会话接管', () => {
+test('短期层跨会话：本工作区的落地文件会被新会话接管', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-short-'))
   mkdirSync(dir, { recursive: true })
   const ws = 'E:/code/thought'
@@ -586,7 +586,7 @@ test('短期层跨会话：本工作区的落地文件会被新会话接管', ()
   )
 
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session } = birth(host, 's-short', ws)
 
   // 短期层不带过来的话，同一个项目里新开的会话手边记忆是空的，
@@ -617,7 +617,7 @@ const lastEntries = (file) => {
 test('清库命令：/mind reset-memory 清记忆三层，人设与统计保留', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-resetmem-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-reset', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -669,7 +669,7 @@ test('清库命令：/mind reset-memory 清记忆三层，人设与统计保留'
 test('清完之后，会话的**下一次落盘**不许把记忆写回来（名单比对写回更权威）', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-resetback-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-back', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -700,7 +700,7 @@ test('清完之后，会话的**下一次落盘**不许把记忆写回来（名�
 test('手工 /mind forget 之后，会话落盘既不许覆盖名单也不许把它写回来', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-forget-keep-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-keep', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -731,10 +731,10 @@ test('手工 /mind forget 之后，会话落盘既不许覆盖名单也不许把
 })
 
 /** 会话日记那一层也要能清（清库三层里它最容易被漏掉）。 */
-test('清库把会话日记也清了，连它的 summary.md 一起重生成', () => {
+test('清库把会话日记也清了，连它的 summary.md 一起重生成', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-resetdiary-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { agent } = birth(host, 's-diary')
 
   // 预置一份"旧会话日记"：不依赖去抖落盘的时机，测的就是"清那一层"
@@ -771,7 +771,7 @@ test('清库把会话日记也清了，连它的 summary.md 一起重生成', ()
 test('show：三层各自成段、序号可用；裸 clear 只列条数不真清', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-show-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-show', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -816,7 +816,7 @@ test('show：三层各自成段、序号可用；裸 clear 只列条数不真清
 test('clear short：只清当前项目的手边，别的项目那份与跨会话库都不动', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-clearshort-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-cs', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -862,7 +862,7 @@ test('clear short：只清当前项目的手边，别的项目那份与跨会话
 test('clear global：只清跨会话库，手边留着', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-clearglobal-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-cg', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -886,7 +886,7 @@ test('clear global：只清跨会话库，手边留着', async () => {
 test('forget short 1：只划手边那条，库里那条留着；名单看得见', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-forgetlayer-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-fl', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -926,7 +926,7 @@ test('forget short 1：只划手边那条，库里那条留着；名单看得见
 test('清掉的东西进回收站，能捞回来并当场复活；真删是另一回事', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-trashloop-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-trash', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -971,7 +971,7 @@ test('清掉的东西进回收站，能捞回来并当场复活；真删是另�
 test('模型自己划掉的（工具走日志）也会进回收站——捕获只看"落盘时消失了"', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-trashlog-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-trashlog', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 
@@ -1001,7 +1001,7 @@ test('模型自己划掉的（工具走日志）也会进回收站——捕获�
 test('撤销遗忘 + 捞回来：划错了能完整撤回', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'dsh-mind-unforget-'))
   const host = makeHost()
-  apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
+  await apply(host.ctx, { stateDir: dir, personaPath: path.join(dir, 'persona.md') })
   const { session, agent } = birth(host, 's-unforget', 'E:/code/thought')
   const cmd = (rawInput) => textOf(host.commands[0].handler({ agent, rawInput }))
 

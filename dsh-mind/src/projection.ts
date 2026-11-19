@@ -29,7 +29,13 @@ import {
   type MindTunables,
   type SessionEventLike,
 } from 'dsh-mind-core'
-import { resolveModule, type Disposable, type ProjectionDefinition, type SessionProjectionsService } from './host.js'
+import {
+  resolveModule,
+  type Disposable,
+  type ProjectionDefinition,
+  type ProjectionHandle,
+  type SessionProjectionsService,
+} from './host.js'
 import { logger } from './log.js'
 
 /** 投影键。改折叠语义时必须同时 +1 `STATE_VERSION`。 */
@@ -582,7 +588,7 @@ function makeView(state: MindState, t: MindTunables): MindView {
  * `init` 就是新会话的起点：从跨会话档案里**接管**人设与长期记忆，
  * 但情感/思想/进度从零开始（它们永远是"这一段对话内"的）。
  */
-export function registerProjection(
+export async function registerProjection(
   projections: SessionProjectionsService,
   deps: {
     tunables: () => MindTunables
@@ -607,7 +613,7 @@ export function registerProjection(
      */
     revive?: (memory: MemoryState) => MemoryState
   },
-): Disposable {
+): Promise<ProjectionHandle | Disposable | undefined> {
   const definition: ProjectionDefinition = {
     key: PROJECTION_KEY,
     stateVersion: STATE_VERSION,
@@ -673,17 +679,51 @@ export function registerProjection(
     },
   }
 
-  return projections.register(definition)
+  // DSH 0.2.x 的 `register` 返回**可调用的 thenable**：await 它得到带 `stateOf`/`dispose` 的句柄。
+  // 老宿主（以及测试里的假宿主）返回的是释放函数——await 一个非 thenable 会原样返回它。
+  // 两种形状都留着，取状态时按"有没有 stateOf"分支（见 `stateOfVia`）。
+  try {
+    return (await projections.register(definition)) as ProjectionHandle | Disposable
+  } catch (error) {
+    logger.warn('[dsh-mind] 注册投影失败：面板与注入会没有数据', error)
+    return undefined
+  }
 }
 
-/** 从会话上取状态；拿不到就返回 undefined（绝不用空状态掩盖问题）。 */
-export function stateOf(projections: SessionProjectionsService, session: unknown): MindState | undefined {
+/**
+ * 从会话上取状态；拿不到就返回 `undefined`（绝不用空状态掩盖问题）。
+ *
+ * 优先用注册时拿到的**句柄**（DSH 0.2.x 的推荐路径，自己折叠、不打弃用警告）；
+ * 句柄不可用（老宿主 / 假宿主）才回落注册表级读取——那条从 0.2.1-rc.2 起已弃用。
+ */
+export function stateOfVia(
+  registration: ProjectionHandle | Disposable | undefined,
+  projections: SessionProjectionsService,
+  session: unknown,
+): MindState | undefined {
   try {
-    const value = projections.stateOf(session, PROJECTION_KEY)
+    const handle = registration as Partial<ProjectionHandle> | undefined
+    if (handle !== undefined && typeof handle.stateOf === 'function') {
+      const value = handle.stateOf(session)
+      if (value === null || value === undefined || typeof value !== 'object') return undefined
+      return value as MindState
+    }
+    const fallback = projections.stateOf
+    if (typeof fallback !== 'function') return undefined
+    const value = fallback.call(projections, session, PROJECTION_KEY)
     if (value === null || value === undefined || typeof value !== 'object') return undefined
     return value as MindState
   } catch (error) {
     logger.warn('[dsh-mind] 取会话状态失败', error)
     return undefined
   }
+}
+
+/**
+ * 老入口：直接按注册表读。
+ *
+ * @deprecated 用 `stateOfVia(句柄, …)`。这里只为向后兼容而保留。
+ */
+export function stateOf(projections: SessionProjectionsService, session: unknown): MindState | undefined {
+  return stateOfVia(undefined, projections, session)
 }

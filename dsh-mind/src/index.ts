@@ -40,7 +40,7 @@ import { registerProactive } from './proactive.js'
 import { configureLogger, logger } from './log.js'
 import { loadArchive, personaFile, signature, stateDir } from './persist.js'
 import { readPersonaKernel, writePersonaTemplate } from './persona-md.js'
-import { hasZod, registerProjection, stateOf } from './projection.js'
+import { hasZod, registerProjection, stateOf, stateOfVia } from './projection.js'
 import { registerSettingsBridge } from './settings-bridge.js'
 import { FORGET_TOOL, INNER_NOTE_TOOL, forgetTool, innerNoteTool, recallTool } from './tools.js'
 import type { CrossSessionResult } from './tools.js'
@@ -306,7 +306,7 @@ function globalOnly(memory: MemoryState): MemoryState {
  * @param ctx 插件作用域（root）。每-agent 的东西一律在 `agent/created` 里用 `agent.ctx` 注册。
  * @param config patch 里给的配置（可能是 `{}`、可能缺键，按默认补齐）
  */
-export function apply(ctx: MindContext, config?: MindConfig): void {
+export async function apply(ctx: MindContext, config?: MindConfig): Promise<void> {
   const now0 = Date.now()
 
   const enabled = flag(config, 'enabled')
@@ -500,7 +500,9 @@ export function apply(ctx: MindContext, config?: MindConfig): void {
     }
   }
 
-  registerProjection(projections, {
+  // 注册投影：DSH 0.2.x 的 `register` 是可调用的 thenable，await 它拿到句柄；
+  // 句柄的 `stateOf(session)` 是推荐的状态读取入口（注册表级读取从 0.2.1-rc.2 起已弃用）。
+  const registration = await registerProjection(projections, {
     tunables: () => tunables,
     adoptPersist,
     // 内核不写日志，只把"发生了什么"递出来；落点就是 mind.log
@@ -534,7 +536,8 @@ export function apply(ctx: MindContext, config?: MindConfig): void {
     // 进程内多条会话会互相覆盖），别再把它做成"注册方给的盒子"。
   })
 
-  const stateOfSession = (session: unknown): MindState | undefined => stateOf(projections, session)
+  const stateOfSession = (session: unknown): MindState | undefined =>
+    stateOfVia(registration, projections, session)
 
   // ── 提示词注入 ────────────────────────────────────────────────
   const systemPrompt = service<SystemPromptService>(ctx, 'systemPrompt')

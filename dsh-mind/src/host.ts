@@ -118,9 +118,34 @@ export interface ProjectionDefinition {
   wire?: ProjectionWire
 }
 
+/**
+ * 注册投影后拿到的句柄（DSH 0.2.1-rc.2 起 `register` 返回它）。
+ *
+ * `stateOf(session)` 是**推荐**的状态读取入口：它自己折叠，不走注册表级读取。
+ */
+export interface ProjectionHandle {
+  stateOf(session: unknown): unknown
+  dispose(): Promise<void>
+}
+
 export interface SessionProjectionsService {
-  register(definition: ProjectionDefinition): Disposable
-  stateOf(session: unknown, key: string): unknown
+  /**
+   * 注册投影。
+   *
+   * DSH 0.2.x 起返回的是**可调用的 thenable**：`await` 它得到 `{ stateOf, dispose }` 句柄；
+   * 直接调用它仍会释放注册，但那个调用已弃用。
+   * 老宿主与测试里的假宿主返回的是释放函数本身——`await` 一个非 thenable 会原样返回它，
+   * 所以两种形状都能走（见 `projection.ts` 的 `stateOfVia`）。
+   */
+  register(definition: ProjectionDefinition): Promise<ProjectionHandle> | Disposable
+  /**
+   * 注册表级读取。
+   *
+   * @deprecated DSH 0.2.1-rc.2 起弃用：每个键的首次读取会打一次 `ctx.logger.warn` 弃用警告，
+   * 且将来会移除。改用 `register` 返回的句柄的 `stateOf(session)`。
+   * 这里保留成可选，是因为老宿主可能没有句柄（回落路径还要用它）。
+   */
+  stateOf?(session: unknown, key: string): unknown
 }
 
 /* ───────────────────────── 工具 ───────────────────────── */
