@@ -8,6 +8,11 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
+# 别让那两个 Windows 专用 E2E 脚本污染 GitHub 的语言统计
+# （一共 0.2%，但会让仓库页显示成 "TypeScript + JavaScript + Batchfile"）
+*.cmd linguist-vendored
+*.bat linguist-vendored
+
 # 二进制：一律不碰
 *.png binary
 *.jpg binary
