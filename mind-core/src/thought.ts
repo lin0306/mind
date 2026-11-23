@@ -29,7 +29,19 @@ export interface InnerNote {
   metaCheck?: string
   /** 我想多看一眼的地方。 */
   curiosity?: string
+  /**
+   * 我的人设自述：一段「我是个什么样的人、怎么说话」的话。
+   *
+   * 人设变化慢（天/月尺度），所以不必常写——觉得"这就是我了"的时候写一次就够。
+   * 注入时优先用这段原文，没有才回退到按四轴拼的规则文案。
+   */
+  selfPortrait?: string
 }
+
+/** 人设自述的长度上限。 */
+// 不用 tunables：这是"一段话能有多长"的硬边界，不是用户该调的旋钮
+// （放进设置页就会和内核默认值分叉，那个坑已经踩过）。
+const PORTRAIT_MAX = 400
 
 /** 截断一条自我陈述，防止把提示词撑爆。 */
 function clip(text: string | undefined, max: number): string | null {
@@ -49,6 +61,8 @@ export function applyNote(
   const tension = typeof note.tension === 'number' && Number.isFinite(note.tension)
     ? Math.min(Math.max(note.tension, 0), 1)
     : thought.tension
+  // 人设自述只在新写了非空内容时替换：没写就保留上一份，不要被"这一轮没提人设"冲掉
+  const portrait = clip(note.selfPortrait, PORTRAIT_MAX)
 
   return {
     tension,
@@ -56,6 +70,7 @@ export function applyNote(
     judgment: clip(note.workingJudgment, t.noteMaxChars) ?? thought.judgment,
     metaCheck: clip(note.metaCheck, t.noteMaxChars) ?? thought.metaCheck,
     curiosity: clip(note.curiosity, t.noteMaxChars) ?? thought.curiosity,
+    selfPortrait: portrait === null ? thought.selfPortrait : { text: portrait, at },
     noteCount: thought.noteCount + 1,
     openLoops: tension > 0.05 ? thought.openLoops + 1 : thought.openLoops,
     updatedAt: at,

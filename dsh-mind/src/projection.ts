@@ -149,6 +149,7 @@ export function buildViewSchema(): unknown {
         emotionWords: arrayNode,
         tension: z['number']?.(),
         thoughtAt: z['number']?.(),
+        selfPortrait: anyNode,
         folded: z['number']?.(),
         mood: anyNode,
         voice: anyNode,
@@ -217,6 +218,13 @@ export interface MindView {
    * （用户盯着一条两天前的记录问过）。有了这个时间戳，面板才能如实说"最近一次"。
    */
   thoughtAt: number
+  /**
+   * 它自己写的人设自述（`inner_note` 的 `selfPortrait` 参数）。
+   *
+   * 面板要显示"它怎么看自己"以及这份自述写于何时（过时了要标出来）；
+   * 没写过就是 null——此时注入侧走规则兜底，面板如实说"还没写过"。
+   */
+  selfPortrait: { text: string; at: number } | null
   /** 本会话折叠过多少事件。 */
   folded: number
   /**
@@ -554,6 +562,7 @@ function makeView(state: MindState, t: MindTunables): MindView {
     emotionWords: allWords(),
     tension: Number(state.thought.tension.toFixed(3)),
     thoughtAt: state.thought.updatedAt,
+    selfPortrait: state.thought.selfPortrait,
     folded: state.folded,
     mood: {
       valence: Number(state.affect.mood.valence.toFixed(3)),

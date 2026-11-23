@@ -228,7 +228,7 @@ test('实况段：工具连续失败后，请求末尾出现情绪词', async ()
   feed(host, session, 'tool/result', { name: 'bash', error: { name: 'ExitError' } })
 
   const text = host.contexts[0].text({ agent })
-  assert.match(text, /【内部状态/, '实况段要有明确边界（真跑里没有边界时，模型会把状态行接在自己回复后面）')
+  assert.match(text, /【此刻/, '实况段要有明确边界（真跑里没有边界时，模型会把状态行接在自己回复后面）')
   assert.ok(/挫败|烦躁/.test(text), `连续失败后要有负向情绪词，实际：${text}`)
 })
 
@@ -241,8 +241,9 @@ test('人设段：在系统提示词里，且不含短期记忆（短期记忆�
   state.memory.short.push({ id: 'm1', kind: 'fact', text: '用户的工作区在 E 盘', importance: 0.8, hits: 1, createdAt: nextTime(), lastAt: nextTime(), because: '用户说的', scope: 'workspace', ws: 'E:/code/thought' })
 
   const text = host.sections[0].text()
-  assert.match(text, /【我的人设】/)
-  assert.match(text, /说话习惯/)
+  assert.match(text, /【我是谁】/)
+  // 没有 selfPortrait 时走规则兜底，输出是"我说话：…"而不是老的"说话习惯：偏短、温度适中"
+  assert.match(text, /我说话/)
   assert.ok(!text.includes('用户的工作区在 E 盘'), '短期记忆不能进系统提示词')
   assert.equal(host.sections[0].interpolate, false)
   assert.equal(host.sections[0].order, 132)

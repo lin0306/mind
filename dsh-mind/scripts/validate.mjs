@@ -179,9 +179,12 @@ if (exists('lib/index.js')) {
     )
   }
   check(
-    bundle.includes('内部状态·给你自己看的'),
+    // 标记用"实况段的边界"，不用某句说明文案——文案会随产品迭代改（2026-11-23 就改过一次，
+    // 原来这里盯的 `内部状态·给你自己看的` 随那次改动消失了），边界标记是"这一段存在"的
+    // 结构性标志，改动频率低得多。
+    bundle.includes('【此刻结束】'),
     '产物里确实有内核（内联成功）',
-    '这是 core 的 render.ts 里才有的字符串',
+    '这是 core 的 render.ts 里才有的边界标记',
   )
   check(exists('lib/types/index.d.ts'), '类型声明产在 lib/types/index.d.ts', '根 tsconfig 现在只出类型')
 }

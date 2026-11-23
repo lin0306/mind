@@ -79,6 +79,8 @@ interface MindView {
   }
   /** 候选中的自我认知（旧宿主不送就是空）。 */
   voiceTraits?: { label: string; hits: number; spanDays: number }[]
+  /** 它自己写的人设自述（后加；旧宿主不送就是 undefined）。null = 还没写过。 */
+  selfPortrait?: { text: string; at: number } | null
   shortMemory: MemoryRowView[]
   /** 手边记忆按项目分好的组（后加；旧宿主只给 `shortMemory`，那时退回平铺）。 */
   shortGroups?: MemoryGroupView[]
@@ -1388,6 +1390,10 @@ function MindPage(props: { sessionId?: string; ctx?: ClientCtx }): unknown {
     // 出厂基线不进档案（见 types.ts：「出厂基线不在档案里」），所以画的是 0.5 这条出厂线
     // 加允许漂移带，**不编一个"档案基线"**。
     const voice = view.voice
+    // 它自己写的人设自述（`inner_note` 的 selfPortrait）。没写过就是 null——
+    // 那时注入侧走规则兜底，这里如实说"还没写过"，不编一段出来。
+    const portrait = view.selfPortrait ?? null
+    const portraitDays = portrait === null ? 0 : Math.floor((Date.now() - portrait.at) / 86_400_000)
     const personaCard = h(
       'section',
       { key: 'persona', style: { ...S.card, marginTop: 0 } },
@@ -1459,6 +1465,25 @@ function MindPage(props: { sessionId?: string; ctx?: ClientCtx }): unknown {
             'p',
             { key: 'voicenote', style: S.sub },
             '四条轴出厂都是 0.50，偏离多少就是最近几轮改了多少：说多少 / 什么口气 / 什么顺序 / 给多大范围。它们之间没有"综合分"。',
+          ),
+      // 它怎么看自己：写过就显示原文（那是它的话，不是规则拼的）
+      portrait === null
+        ? h(
+            'p',
+            { key: 'portrait-empty', style: S.sub },
+            '它还没写过"我是谁"。注入里用的是按四条轴拼出来的规则文案。',
+          )
+        : h(
+            'div',
+            { key: 'portrait' },
+            h('h3', { key: 'ph', style: S.groupTitle }, '它怎么看自己'),
+            h('p', { key: 'pt', style: S.body }, portrait.text),
+            h(
+              'p',
+              { key: 'pn', style: S.sub },
+              portraitDays <= 0 ? '今天写的' : `${portraitDays} 天前写的`,
+              portraitDays > 7 ? '——已经一周了，要是它变了就该重写一段' : '',
+            ),
           ),
       (view.voiceTraits ?? []).length === 0
         ? null

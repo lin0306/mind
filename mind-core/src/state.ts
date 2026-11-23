@@ -42,6 +42,7 @@ export function emptyThought(now: number): ThoughtState {
     judgment: null,
     metaCheck: null,
     curiosity: null,
+    selfPortrait: null,
     noteCount: 0,
     openLoops: 0,
     updatedAt: now,
@@ -259,12 +260,23 @@ export function normalizeAffect(raw: unknown, t: MindTunables, now: number): Aff
 export function normalizeThought(raw: unknown, now: number): ThoughtState {
   const o = (raw ?? {}) as Record<string, unknown>
   const maybe = (k: string): string | null => (typeof o[k] === 'string' && o[k] ? (o[k] as string) : null)
+  // 老档案没有 `selfPortrait`（2026-11-23 才加的）→ 补成 null，走规则兜底
+  const rawPortrait = o['selfPortrait']
+  const portraitRecord = (rawPortrait ?? null) as Record<string, unknown> | null
+  const portraitText = portraitRecord !== null && typeof portraitRecord === 'object' && typeof portraitRecord['text'] === 'string'
+    ? (portraitRecord['text'] as string)
+    : ''
+  const selfPortrait =
+    portraitText !== ''
+      ? { text: portraitText, at: num(portraitRecord?.['at'], now) }
+      : null
   return {
     tension: num(o['tension'], 0),
     intent: maybe('intent'),
     judgment: maybe('judgment'),
     metaCheck: maybe('metaCheck'),
     curiosity: maybe('curiosity'),
+    selfPortrait,
     noteCount: num(o['noteCount'], 0),
     openLoops: num(o['openLoops'], 0),
     updatedAt: num(o['updatedAt'], now),

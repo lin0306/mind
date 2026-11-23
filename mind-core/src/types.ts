@@ -85,6 +85,19 @@ export interface AffectState {
   updatedAt: number
 }
 
+/**
+ * 一段**它自己写的人设自述**：我现在是个什么样的人、怎么说活。
+ *
+ * 人设的变化以天/月计，所以这段只在它自己觉得"这就是我了"的时候才写一次，
+ * 注入时优先用它（原文照用），没有才回退到按四轴拼的规则文案。
+ */
+export interface SelfPortrait {
+  /** 自述正文（它自己的话，不是规则拼的）。 */
+  text: string
+  /** 写于何时（毫秒）。用来判断这份自述是不是已经过时了。 */
+  at: number
+}
+
 /** 思想层状态。 */
 export interface ThoughtState {
   /** 悬置的张力：有矛盾没解决时 >0，解决后衰减。0..1 */
@@ -97,6 +110,8 @@ export interface ThoughtState {
   metaCheck: string | null
   /** 最近一次的好奇点。 */
   curiosity: string | null
+  /** 它自己的人设自述；没写过就是 null（此时人设段用规则兜底）。 */
+  selfPortrait: SelfPortrait | null
   /** 自我写下的思想条数（本会话）。 */
   noteCount: number
   /** 写下思想、但还没被后续行动消解的次数。 */

@@ -1,6 +1,6 @@
 {
   "name": "dsh-mind-core",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "dsh-mind 的内核：与 agent 无关的情感、人设、记忆、思想与自更新逻辑（纯函数、零依赖、可回放）",
   "type": "module",
   "main": "./lib/index.js",

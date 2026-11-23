@@ -59,9 +59,9 @@ export interface InjectDeps {
   stateOfSession(session: unknown): MindState | undefined
 }
 
-/** 人设段正文：内核 / 自我认知 / 说话习惯 / 硬边界。**完全稳定**。 */
+/** 人设段正文：自述（它自己写的）优先，没写过就按四轴规则兜底。**变化很慢**。 */
 export function personaText(state: MindState, t: MindTunables): string {
-  return renderPersonaSection(state.persona, NO_MEMORY, t)
+  return renderPersonaSection(state.persona, NO_MEMORY, t, state.thought.selfPortrait)
 }
 
 /**

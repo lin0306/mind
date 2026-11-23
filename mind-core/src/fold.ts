@@ -201,10 +201,12 @@ export function parseNote(raw: unknown): InnerNote | null {
   const judgment = pick('workingJudgment')
   const metaCheck = pick('metaCheck')
   const curiosity = pick('curiosity')
+  const selfPortrait = pick('selfPortrait')
   if (intent !== undefined) note.intent = intent
   if (judgment !== undefined) note.workingJudgment = judgment
   if (metaCheck !== undefined) note.metaCheck = metaCheck
   if (curiosity !== undefined) note.curiosity = curiosity
+  if (selfPortrait !== undefined) note.selfPortrait = selfPortrait
   if (tension !== undefined) note.tension = tension
   return Object.keys(note).length > 0 ? note : null
 }

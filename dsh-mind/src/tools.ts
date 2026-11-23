@@ -73,6 +73,13 @@ export function innerNoteTool(): ToolSpec {
           type: 'string',
           description: '我想多看一眼的地方。',
         },
+        selfPortrait: {
+          type: 'string',
+          description:
+            '我的人设自述：一段「我是个什么样的人、怎么说话」的话（两三句就够）。' +
+            '人设变化慢，觉得"这就是我了"的时候写一次即可——不要每次调用都写，那是把日记当人设。' +
+            '注入时优先用这段原文。',
+        },
         remember: {
           type: 'string',
           description:

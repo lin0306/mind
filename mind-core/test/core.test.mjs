@@ -25,6 +25,7 @@ import {
   recall,
   regress,
   renderRealtimeSection,
+  renderPersonaSection,
   rememberShort,
   settledTraits,
   settleKernel,
@@ -288,10 +289,10 @@ test('isDuplicate 认得同一件事的两种写法', () => {
 
 test('实况段永远存在且很短（空态也只报平静，绝不复述情绪）', () => {
   const text = renderRealtimeSection(fresh(0), 0)
-  assert.ok(text.startsWith('【内部状态'), '要用明确的边界标记开头')
-  assert.ok(text.endsWith('【内部状态结束】'), '边界要闭合——真跑里模型会把没闭合的状态行接在自己回复末尾')
+  assert.ok(text.startsWith('【此刻】'), '要用明确的边界标记开头')
+  assert.ok(text.endsWith('【此刻结束】'), '边界要闭合——真跑里模型会把没闭合的状态行接在自己回复末尾')
   assert.ok(text.length < 220, `空态实况段应很短，实际 ${text.length}`)
-  assert.ok(text.includes('平静') || text.includes('情绪'))
+  assert.ok(text.includes('平'), '空态也要说一句"没什么情绪"，不能空着让模型自己编')
 })
 
 test('没有任何情绪时显示平静', () => {
@@ -332,4 +333,76 @@ test('文本规则表：几种说法都能命中', () => {
   assert.ok(hit('随便').includes('ambiguity'))
   assert.ok(hit('我说过三遍了').includes('user_repeat'))
   assert.deepEqual(hit('嗯'), ['goal_progress'], '很短的推进语只给一点点推进感')
+})
+
+// ── 注入：数值只给面板，文案给模型 ─────────────────────────
+//
+// 这一组的四道锁是 2026-11-23 那次改动的目的本身：注入里**不许再有读数**。
+// 一旦有人（包括我）手滑把 `疲惫(0.55)` 之类塞回去，这几条会立刻红。
+
+/** 造一个带指定情绪的状态（强度精确可控，不依赖信号链）。 */
+const withEmotions = (pairs) => {
+  const state = fresh(0)
+  state.affect = {
+    ...state.affect,
+    emotions: pairs.map(([word, strength]) => ({ word, strength, at: 0, count: 1 })),
+  }
+  return state
+}
+
+test('实况段里不许出现裸数值——数值是给面板看的，模型只看文案', () => {
+  const text = renderRealtimeSection(withEmotions([['挫败', 0.55], ['疲惫', 0.16]]), 0)
+  assert.ok(!/\(\s*[0-9]/.test(text), `不许出现 (0.55) 这类读数，实际：${text}`)
+  assert.ok(!/[0-9]+\.[0-9]+/.test(text), `不许出现小数读数，实际：${text}`)
+  assert.match(text, /挫败/, '情绪词本身要在——那是文案，不是读数')
+})
+
+test('强度是权重不是筛选：最小的那个也要出现在文案里', () => {
+  const text = renderRealtimeSection(withEmotions([['好奇', 0.6], ['满足', 0.42], ['疲惫', 0.16]]), 0)
+  assert.match(text, /好奇/)
+  assert.match(text, /满足/)
+  assert.match(text, /疲惫/, '0.16 的疲惫是底色，丢了它语气就偏了（"别铺太长"就是它给的）')
+  assert.match(text, /底下压着/, '低强度应当作为"底色"出现，而不是被丢掉')
+})
+
+test('太淡的情绪（<0.1）不写进文案：说出来只是噪声', () => {
+  const text = renderRealtimeSection(withEmotions([['好奇', 0.5], ['无聊', 0.05]]), 0)
+  assert.ok(!text.includes('无聊'), `0.05 不该出现，实际：${text}`)
+})
+
+test('文案里的情绪词不许超出状态（防编造）', () => {
+  const state = withEmotions([['挫败', 0.5]])
+  const text = renderRealtimeSection(state, 0)
+  // 词表里的全部 14 个情绪词；除了状态里那个，别的都不许出现在文案里
+  const all = ['挫败', '烦躁', '焦虑', '疲惫', '困惑', '内疚', '委屈', '无聊', '认可', '满足', '好奇', '感激', '自豪', '期待']
+  for (const word of all) {
+    if (!text.includes(word)) continue
+    assert.ok(
+      state.affect.emotions.some((e) => e.word === word && e.strength >= 0.1),
+      `文案里出现了状态里没有的「${word}」：${text}`,
+    )
+  }
+})
+
+test('人设段：优先用 selfPortrait 原文，没写过才走规则兜底', () => {
+  const state = fresh(0)
+  const fallback = renderPersonaSection(state.persona, state.memory, T)
+  assert.match(fallback, /【我是谁】/)
+  assert.match(fallback, /我说话/, '没写过自述时用四轴拼的规则文案兜底')
+
+  const mine = '我说话偏短，先给结论；没把握就直说。'
+  const withPortrait = renderPersonaSection(state.persona, state.memory, T, { text: mine, at: 0 })
+  assert.ok(withPortrait.includes(mine), '写过自述就直接用原文，不许再拼规则文案')
+})
+
+test('人设段：价值观不许以「标签(数值)」的形式出现', () => {
+  const state = fresh(0)
+  state.persona = {
+    ...state.persona,
+    kernel: { ...state.persona.kernel, values: { 认真: 0.8, 克制: 0.6, 随便: 0.3 } },
+  }
+  const text = renderPersonaSection(state.persona, state.memory, T)
+  assert.ok(!/认真\([0-9]/.test(text), `不许出现 认真(0.8)，实际：${text}`)
+  assert.match(text, /认真/, '但要翻译成人话：程度词 + 性格词')
+  assert.ok(!text.includes('随便'), '低于 0.5 的价值观不写（写了等于给"我可以不认真"的许可）')
 })

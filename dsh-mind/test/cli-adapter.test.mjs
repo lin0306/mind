@@ -28,10 +28,10 @@ test('第二个 adapter 能独立跑完整条链路（没有 DSH）', () => {
 
   assert.match(out, /命令行 adapter（没有一行 DSH）/)
   // stable：人设段（给系统提示词的那一段）
-  assert.match(out, /【我的人设】/)
+  assert.match(out, /【我是谁】/)
   // dynamic：此刻（给请求末尾的那一段）——它带闭合边界，免得模型把它当风格接在回复后面
-  assert.match(out, /【内部状态·给你自己看的，不要出现在回复里】/)
-  assert.match(out, /【内部状态结束】/)
+  assert.match(out, /【此刻】/)
+  assert.match(out, /【此刻结束】/)
   // 折出来的情绪真的有名字，不是只涨一个数字
   assert.match(out, /挫败/)
   // 长期记忆：它自己写下的那句（不是用户原话），一轮结束时固化，之后靠主动查才出现
@@ -44,7 +44,7 @@ test('第二个 adapter 能独立跑完整条链路（没有 DSH）', () => {
 test('第二个 adapter 也能吃外部事件流（JSONL）', () => {
   const json = runCli(['--demo', '--json'])
   const parsed = JSON.parse(json)
-  assert.ok(parsed.stable.includes('【我的人设】'))
+  assert.ok(parsed.stable.includes('【我是谁】'))
   assert.equal(parsed.turns.length, 3)
   assert.ok(parsed.recall.length > 0, '道谢那轮之后，「包管理器 pnpm」应该查得到')
   assert.equal(parsed.persist.stats.turns, 3)
